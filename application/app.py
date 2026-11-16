@@ -25,7 +25,7 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 # Trained YOLO model
-MODEL_PATH = "/Users/gunarpatel/runs/pcb/improved/weights/best.pt"
+MODEL_PATH = BASE_DIR.parent / "models" / "best.pt"
 
 print("Loading PCB defect detection model...")
 
@@ -75,7 +75,7 @@ def index():
             source=str(upload_path),
             imgsz=640,
             conf=CONFIDENCE_THRESHOLD,
-            device="mps",
+            device="cpu",
             save=True,
             project=str(BASE_DIR / "results"),
             name="web_inspection",

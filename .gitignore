@@ -10,3 +10,4 @@ application/results/
 dataset/
 dataset_preview/
 yolov8n.pt
+*.save

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+DeepPCB/
+runs/
+application/uploads/
+application/results/
+dataset/
+dataset_preview/
+yolov8n.pt

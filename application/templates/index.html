@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCB Vision AI</title>
+
+<style>
+:root {
+    --bg: #070d1a;
+    --panel: #0c1426;
+    --panel-2: #101a30;
+    --border: #1c2942;
+    --text: #e6ebf5;
+    --muted: #8493ad;
+    --accent: #4f46e5;
+    --accent-soft: #28268a;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #38bdf8;
+    --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "Segoe UI", Inter, system-ui, -apple-system, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+/* ---------- Layout ---------- */
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #0a1122, #070d1a);
+    border-right: 1px solid var(--border);
+    padding: 26px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 700; padding: 0 10px 28px; }
+.logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    box-shadow: 0 0 22px rgba(99, 102, 241, .45);
+}
+.logo span { color: var(--blue); }
+
+.nav-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px; border-radius: 9px;
+    color: #b4c0d6; font-size: 15px; text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.nav-item:hover { background: var(--panel-2); color: #fff; }
+.nav-item.active { background: var(--accent-soft); color: #fff; box-shadow: inset 0 0 0 1px rgba(129, 140, 248, .35); }
+.badge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+
+.side-card {
+    margin-top: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.side-card strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 8px; box-shadow: 0 0 8px var(--green); }
+.progress { height: 6px; background: #1a2540; border-radius: 6px; margin: 12px 0 8px; overflow: hidden; }
+.progress > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #818cf8); border-radius: 6px; }
+
+.main { flex: 1; min-width: 0; padding: 26px 30px 34px; }
+
+/* ---------- Topbar ---------- */
+.topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 22px; flex-wrap: wrap; }
+.topbar h1 { font-size: 28px; font-weight: 600; }
+.topbar p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.actions { display: flex; gap: 12px; align-items: center; }
+.btn-ghost {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 18px; border-radius: 10px; font-size: 14px; cursor: default;
+}
+.btn-ghost.primary { background: var(--accent-soft); border-color: #4338ca; }
+.status { color: var(--green); }
+
+/* ---------- Cards ---------- */
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.card-head h3 { font-size: 16px; font-weight: 600; }
+.card-head h3 small { color: var(--muted); font-weight: 400; font-size: 14px; }
+.card-head a { color: var(--blue); font-size: 13px; text-decoration: none; }
+.live { color: var(--green); font-size: 13px; margin-left: 10px; font-weight: 400; }
+
+.kpis { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 18px; }
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); padding: 6px 0; }
+.kpi { text-align: center; padding: 8px 10px; border-right: 1px solid var(--border); }
+.kpi:last-child { border-right: 0; }
+.kpi b { display: block; font-size: 34px; font-weight: 600; }
+.kpi span { font-size: 13px; font-weight: 600; letter-spacing: .5px; }
+.kpi em { font-style: normal; color: var(--muted); font-size: 13px; margin-left: 10px; }
+.green { color: var(--green); } .amber { color: var(--amber); } .red { color: var(--red); }
+
+.kpi-row.two { grid-template-columns: 1fr 1fr; }
+.kpi.left { text-align: left; padding-left: 18px; }
+.kpi.left label { display: block; font-size: 12px; letter-spacing: .6px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.kpi.left b { font-size: 30px; display: inline; }
+.kpi.left small { color: var(--muted); font-size: 13px; margin-left: 6px; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------- Upload ---------- */
+.drop-area {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 330px; padding: 30px 20px; text-align: center; cursor: pointer; overflow: hidden;
+    border: 2px dashed #2c3d60; border-radius: var(--radius);
+    background:
+        linear-gradient(rgba(56, 189, 248, .04) 1px, transparent 1px) 0 0 / 100% 28px,
+        linear-gradient(90deg, rgba(56, 189, 248, .04) 1px, transparent 1px) 0 0 / 28px 100%,
+        #0a1224;
+    transition: border-color .2s, background-color .2s;
+}
+.drop-area:hover, .drop-area.dragover { border-color: var(--blue); background-color: #0c1a30; }
+.upload-icon { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: #c7d2fe; margin-bottom: 16px; }
+.upload-icon svg { width: 30px; height: 30px; }
+.drop-area h3 { font-size: 18px; margin-bottom: 8px; }
+.drop-area p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+#preview { display: none; max-width: 100%; max-height: 300px; border-radius: 10px; border: 1px solid var(--border); }
+.drop-area.has-file .placeholder { display: none; }
+.drop-area.has-file::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 2px; top: 0;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    box-shadow: 0 0 14px var(--blue); animation: scan 3s linear infinite;
+}
+@keyframes scan { to { top: 100%; } }
+
+.tag { position: absolute; top: 14px; left: 14px; background: rgba(34, 197, 94, .9); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; display: none; }
+.drop-area.has-file .tag { display: block; }
+#fileName { margin-top: 14px; color: var(--blue); font-size: 14px; word-break: break-all; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.chip { font-size: 12px; color: #b4c0d6; background: var(--panel-2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; }
+.chip::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; background: var(--c); }
+
+input[type="file"] { display: none; }
+
+#submitBtn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; margin-top: 20px; padding: 15px;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    color: #fff; border: 0; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(79, 70, 229, .3); transition: transform .15s, filter .15s;
+}
+#submitBtn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+#submitBtn:disabled { background: #2a3550; box-shadow: none; cursor: not-allowed; transform: none; }
+.note { text-align: center; margin-top: 14px; color: #5f6f8c; font-size: 12px; }
+
+/* ---------- Charts ---------- */
+.charts { display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; }
+.donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.donut { position: relative; width: 170px; height: 170px; border-radius: 50%; flex-shrink: 0; }
+.donut::after { content: ""; position: absolute; inset: 22px; background: var(--panel); border-radius: 50%; }
+.donut-center { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; text-align: center; }
+.donut-center b { font-size: 32px; font-weight: 600; }
+.donut-center span { font-size: 12px; color: var(--muted); }
+.legend { list-style: none; font-size: 13px; flex: 1; min-width: 150px; }
+.legend li { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: #c3cde0; }
+.legend li::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--c); }
+.legend span { margin-left: auto; color: var(--muted); }
+#lineChart { width: 100%; height: 190px; }
+.chart-legend { font-size: 12px; color: var(--muted); display: flex; gap: 18px; margin-bottom: 8px; }
+.chart-legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+/* ---------- Lists ---------- */
+.defect { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.defect:last-child { border-bottom: 0; }
+.thumb { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; border: 1px solid var(--c); background: radial-gradient(circle at 50% 50%, #1b2b4a, #0a1224); position: relative; }
+.thumb::after { content: ""; position: absolute; inset: 22px; border: 1.5px solid var(--c); border-radius: 3px; }
+.defect-info { flex: 1; min-width: 0; }
+.defect-info b { font-size: 15px; font-weight: 600; }
+.defect-info small { color: var(--muted); margin-left: 6px; }
+.defect-info p { color: var(--muted); font-size: 13px; margin: 3px 0; }
+.defect-info .conf { color: var(--c); font-size: 13px; font-weight: 600; }
+.pill { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+
+.metric { display: flex; align-items: center; gap: 12px; padding: 11px 0; font-size: 14px; }
+.metric .ic { color: var(--green); }
+.metric .name { width: 110px; color: #c3cde0; }
+.metric b { width: 52px; text-align: right; font-weight: 600; }
+.bar { flex: 1; height: 6px; background: #1a2540; border-radius: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 6px; background: var(--green); }
+.foot-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; gap: 6px; }
+
+footer { margin-top: 28px; color: #4f5f7e; font-size: 12px; text-align: center; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+    .grid, .kpis, .charts { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 18px; }
+    .actions .btn-ghost:not(.status) { display: none; }
+}
+@media (max-width: 560px) {
+    .kpi b { font-size: 26px; }
+    .kpi em { display: block; margin: 4px 0 0; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- SVG icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-bars" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 004 0"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7zM14 3v4h4M9 13h6M9 17h6"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3L2 21h20zM12 10v5M12 18v.01"/></symbol>
+</svg>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-mark"><svg class="i"><use href="#i-shield"/></svg></div>
+            <div>PCB <span>Vision</span></div>
+        </div>
+
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-home"/></svg>Overview</a>
+        <a class="nav-item active" href="#"><svg class="i"><use href="#i-eye"/></svg>Vision QC</a>
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-cpu"/></svg>Model Health</a>
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-bars"/></svg>Analytics</a>
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-bell"/></svg>Alerts <span class="badge">12</span></a>
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-doc"/></svg>Reports</a>
+        <a class="nav-item" href="#"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+
+        <div class="side-card">
+            <strong><span class="dot"></span>Inspection Node</strong>
+            YOLOv8 Nano · Running
+            <div class="progress"><i style="width:68%"></i></div>
+            <div style="display:flex;justify-content:space-between"><span>Shift A</span><span>05:23:47</span></div>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div>
+                <h1>PCB Inspection Dashboard</h1>
+                <p>AI-powered quality inspection catches defects instantly.</p>
+            </div>
+            <div class="actions">
+                <div class="btn-ghost status"><span class="dot"></span>System Ready</div>
+                <div class="btn-ghost"><svg class="i"><use href="#i-eye"/></svg>Calibrate</div>
+                <div class="btn-ghost primary"><svg class="i"><use href="#i-gear"/></svg>Settings</div>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <section class="kpis">
+            <div class="card kpi-row">
+                <div class="kpi"><b class="green" data-kpi="pass">0</b><span class="green">PASS</span><em data-kpi="passPct"></em></div>
+                <div class="kpi"><b class="amber" data-kpi="review">0</b><span class="amber">REVIEW</span><em data-kpi="reviewPct"></em></div>
+                <div class="kpi"><b class="red" data-kpi="reject">0</b><span class="red">REJECT</span><em data-kpi="rejectPct"></em></div>
+            </div>
+            <div class="card kpi-row two">
+                <div class="kpi left"><label>Detection Model</label><b>YOLOv8</b><small>Nano</small></div>
+                <div class="kpi left"><label>Defect Classes</label><b>06</b><small>categories</small></div>
+            </div>
+        </section>
+
+        <div class="grid">
+
+            <!-- Left column -->
+            <div class="stack">
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>New PCB Inspection <span class="live">● Ready</span></h3>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" id="inspectForm">
+
+                        <label class="drop-area" for="pcbImage">
+                            <span class="tag">READY</span>
+                            <div class="placeholder">
+                                <div class="upload-icon" style="margin-inline:auto"><svg class="i"><use href="#i-upload"/></svg></div>
+                                <h3>Upload PCB Image</h3>
+                                <p>Click here or drag and drop your image</p>
+                                <p>Supported formats: JPG, JPEG, PNG | Maximum 10 MB</p>
+                            </div>
+                            <img id="preview" alt="Selected PCB preview">
+                            <div id="fileName"></div>
+                        </label>
+
+                        <input type="file" id="pcbImage" name="pcb_image" accept=".jpg,.jpeg,.png" required>
+
+                        <div class="chips">
+                            <span class="chip" style="--c:#ef4444">Missing Hole</span>
+                            <span class="chip" style="--c:#f59e0b">Mouse Bite</span>
+                            <span class="chip" style="--c:#6366f1">Open Circuit</span>
+                            <span class="chip" style="--c:#38bdf8">Short</span>
+                            <span class="chip" style="--c:#22c55e">Spur</span>
+                            <span class="chip" style="--c:#94a3b8">Spurious Copper</span>
+                        </div>
+
+                        <button type="submit" id="submitBtn">Start PCB Inspection →</button>
+                    </form>
+
+                    <div class="note">Powered by YOLOv8 | PCB Vision AI</div>
+                </section>
+
+                <section class="card charts">
+                    <div>
+                        <div class="card-head"><h3>Defect Breakdown <small>(Today)</small></h3></div>
+                        <div class="donut-wrap">
+                            <div class="donut" id="donut"><div class="donut-center"><b id="donutTotal">0</b><span>Total Defects</span></div></div>
+                            <ul class="legend" id="legend"></ul>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card-head"><h3>Defects Over Time</h3></div>
+                        <div class="chart-legend">
+                            <span><i style="background:var(--red)"></i>Rejects</span>
+                            <span><i style="background:var(--amber)"></i>Reviews</span>
+                        </div>
+                        <svg id="lineChart" viewBox="0 0 400 190" preserveAspectRatio="none"></svg>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right column -->
+            <div class="stack">
+
+                <section class="card">
+                    <div class="card-head"><h3>Recent Inspections</h3><a href="#">View All</a></div>
+                    <div id="recent"></div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head"><h3>Model Performance</h3><a href="#">View Details</a></div>
+                    <div id="metrics"></div>
+                    <div class="foot-meta"><span>Model: YOLOv8n PCB v1.0</span><span id="updated"></span></div>
+                </section>
+            </div>
+        </div>
+
+        <footer>PCB Vision AI | AI-Based PCB Defect Detection System</footer>
+    </main>
+</div>
+
+<script>
+/* ============================================================
+   Dashboard data — replace with real values from your backend
+   (e.g. inject via a Jinja <script> block or fetch an endpoint).
+   ============================================================ */
+const DASHBOARD_DATA = {
+    kpi: { pass: 2148, review: 28, reject: 14 },
+    breakdown: [
+        { label: "Missing Hole",    value: 24, color: "#ef4444" },
+        { label: "Mouse Bite",      value: 16, color: "#f59e0b" },
+        { label: "Open Circuit",    value: 9,  color: "#6366f1" },
+        { label: "Other",           value: 7,  color: "#64748b" }
+    ],
+    timeline: {
+        labels:  ["06:00", "08:00", "10:00", "12:00", "14:00"],
+        rejects: [5, 9, 14, 18, 28],
+        reviews: [4, 6, 9, 11, 15]
+    },
+    recent: [
+        { name: "Open Circuit", zone: "Zone A", time: "14:08:42", id: "PCB-20418", conf: 98, status: "REJECT" },
+        { name: "Mouse Bite",   zone: "Zone B", time: "14:07:21", id: "PCB-20417", conf: 94, status: "REVIEW" },
+        { name: "Missing Hole", zone: "Zone C", time: "14:05:11", id: "PCB-20416", conf: 96, status: "REJECT" },
+        { name: "Spur",         zone: "Zone D", time: "14:03:55", id: "PCB-20415", conf: 93, status: "REVIEW" }
+    ],
+    metrics: [
+        { label: "Precision",   value: 98.6, icon: "i-shield" },
+        { label: "Recall",      value: 97.9, icon: "i-eye" },
+        { label: "F1 Score",    value: 98.2, icon: "i-cpu" },
+        { label: "False Reject", value: 0.6, icon: "i-warn", warn: true }
+    ]
+};
+
+const STATUS_COLOR = { REJECT: "#ef4444", REVIEW: "#f59e0b", PASS: "#22c55e" };
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => n.toLocaleString("en-US");
+
+/* ---------- KPIs ---------- */
+(function renderKpis() {
+    const { pass, review, reject } = DASHBOARD_DATA.kpi;
+    const total = pass + review + reject;
+    const pct = (n) => ((n / total) * 100).toFixed(1) + "%";
+    document.querySelector('[data-kpi="pass"]').textContent = fmt(pass);
+    document.querySelector('[data-kpi="review"]').textContent = fmt(review);
+    document.querySelector('[data-kpi="reject"]').textContent = fmt(reject);
+    document.querySelector('[data-kpi="passPct"]').textContent = pct(pass);
+    document.querySelector('[data-kpi="reviewPct"]').textContent = pct(review);
+    document.querySelector('[data-kpi="rejectPct"]').textContent = pct(reject);
+})();
+
+/* ---------- Donut + legend ---------- */
+(function renderBreakdown() {
+    const items = DASHBOARD_DATA.breakdown;
+    const total = items.reduce((s, i) => s + i.value, 0);
+    let acc = 0;
+    const stops = items.map((i) => {
+        const start = (acc / total) * 100;
+        acc += i.value;
+        return `${i.color} ${start}% ${(acc / total) * 100}%`;
+    });
+    $("donut").style.background = `conic-gradient(${stops.join(", ")})`;
+    $("donutTotal").textContent = total;
+    $("legend").innerHTML = items.map((i) =>
+        `<li style="--c:${i.color}">${i.label}<span>${i.value} (${((i.value / total) * 100).toFixed(1)}%)</span></li>`
+    ).join("");
+})();
+
+/* ---------- Line chart ---------- */
+(function renderLine() {
+    const { labels, rejects, reviews } = DASHBOARD_DATA.timeline;
+    const W = 400, H = 190, padL = 28, padB = 22, padT = 8, padR = 8;
+    const max = Math.ceil(Math.max(...rejects, ...reviews) / 10) * 10;
+    const x = (i) => padL + (i * (W - padL - padR)) / (labels.length - 1);
+    const y = (v) => padT + (1 - v / max) * (H - padT - padB);
+    const path = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+
+    let svg = "";
+    for (let g = 0; g <= max; g += max / 3) {
+        svg += `<line x1="${padL}" x2="${W - padR}" y1="${y(g)}" y2="${y(g)}" stroke="#1c2942" stroke-width="1"/>
+                <text x="0" y="${y(g) + 4}" fill="#8493ad" font-size="10">${Math.round(g)}</text>`;
+    }
+    labels.forEach((l, i) => {
+        svg += `<text x="${x(i)}" y="${H - 4}" fill="#8493ad" font-size="10" text-anchor="middle">${l}</text>`;
+    });
+    svg += `<path d="${path(reviews)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+            <path d="${path(rejects)}" fill="none" stroke="#ef4444" stroke-width="2" stroke-linejoin="round"/>`;
+    $("lineChart").innerHTML = svg;
+})();
+
+/* ---------- Recent inspections ---------- */
+$("recent").innerHTML = DASHBOARD_DATA.recent.map((d) => {
+    const c = STATUS_COLOR[d.status];
+    return `<div class="defect" style="--c:${c}">
+        <div class="thumb"></div>
+        <div class="defect-info">
+            <b>${d.name}</b><small>${d.zone}</small>
+            <p>${d.time} • ${d.id}</p>
+            <span class="conf">Confidence: ${d.conf}%</span>
+        </div>
+        <span class="pill">${d.status}</span>
+    </div>`;
+}).join("");
+
+/* ---------- Model performance ---------- */
+$("metrics").innerHTML = DASHBOARD_DATA.metrics.map((m) => {
+    const color = m.warn ? "var(--amber)" : "var(--green)";
+    return `<div class="metric">
+        <svg class="i ic" style="color:${color}"><use href="#${m.icon}"/></svg>
+        <span class="name">${m.label}</span>
+        <b>${m.value}%</b>
+        <div class="bar"><i style="width:${m.value}%;background:${color}"></i></div>
+    </div>`;
+}).join("");
+$("updated").textContent = "Last updated: " + new Date().toLocaleTimeString("en-GB");
+
+/* ============================================================
+   Upload handling
+   ============================================================ */
+const input = $("pcbImage");
+const preview = $("preview");
+const fileName = $("fileName");
+const dropArea = document.querySelector(".drop-area");
+const form = $("inspectForm");
+const submitBtn = $("submitBtn");
+const MAX_SIZE = 10 * 1024 * 1024;
+const ALLOWED = ["image/jpeg", "image/png"];
+
+function resetFile() {
+    input.value = "";
+    preview.style.display = "none";
+    fileName.textContent = "";
+    dropArea.classList.remove("has-file");
+}
+
+function showImage(file) {
+    if (!file) return;
+
+    if (!ALLOWED.includes(file.type)) {
+        alert("Please select a JPG, JPEG or PNG image.");
+        return resetFile();
+    }
+    if (file.size > MAX_SIZE) {
+        alert("Maximum file size is 10 MB.");
+        return resetFile();
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+        fileName.textContent = file.name;
+        dropArea.classList.add("has-file");
+    };
+    reader.readAsDataURL(file);
+}
+
+input.addEventListener("change", () => showImage(input.files[0]));
+
+["dragenter", "dragover"].forEach((ev) =>
+    dropArea.addEventListener(ev, (e) => { e.preventDefault(); dropArea.classList.add("dragover"); })
+);
+["dragleave", "drop"].forEach((ev) =>
+    dropArea.addEventListener(ev, (e) => { e.preventDefault(); dropArea.classList.remove("dragover"); })
+);
+
+dropArea.addEventListener("drop", (e) => {
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    showImage(file);
+});
+
+form.addEventListener("submit", () => {
+    submitBtn.textContent = "Analysing PCB…";
+    // Disable on next tick so the form data is still submitted.
+    setTimeout(() => (submitBtn.disabled = true), 0);
+});
+</script>
+
+</body>
+</html>

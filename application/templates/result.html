@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PCB Inspection Results</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #0f172a;
+            color: white;
+            padding: 22px 8%;
+        }
+
+        header h2 {
+            font-size: 23px;
+        }
+
+        header p {
+            color: #94a3b8;
+            margin-top: 6px;
+            font-size: 13px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 45px auto;
+            padding: 20px;
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .heading h1 {
+            margin-bottom: 10px;
+        }
+
+        .heading p {
+            color: #64748b;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+
+        .card p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card h2 {
+            font-size: 30px;
+            margin-top: 12px;
+            color: #2563eb;
+        }
+
+        .image-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+
+        .image-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            max-height: 650px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .defects {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+
+        .defects h2 {
+            margin-bottom: 20px;
+        }
+
+        .defect-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .defect-row:last-child {
+            border-bottom: none;
+        }
+
+        .count {
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .info {
+            text-align: center;
+            color: #64748b;
+            margin-top: 22px;
+            font-size: 13px;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background: #1d4ed8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>PCB Vision AI</h2>
+    <p>PCB Defect Detection and Inspection System</p>
+</header>
+
+<main>
+
+    <section class="heading">
+        <h1>Inspection Results</h1>
+        <p>PCB defect detection has been completed.</p>
+    </section>
+
+    <section class="summary">
+
+        <div class="card">
+            <p>Total Defects Detected</p>
+            <h2>{{ total_defects }}</h2>
+        </div>
+
+        <div class="card">
+            <p>Confidence Threshold</p>
+            <h2>{{ (confidence * 100)|int }}%</h2>
+        </div>
+
+    </section>
+
+    <section class="image-card">
+
+        <h2>Annotated PCB Image</h2>
+
+        <img
+            class="result-image"
+            src="{{ url_for('result_image', filename=image_name) }}"
+            alt="PCB defect detection result"
+        >
+
+    </section>
+
+    <section class="defects">
+
+        <h2>Defect Summary</h2>
+
+        {% if defect_counts %}
+
+            {% for name, count in defect_counts.items() %}
+
+                <div class="defect-row">
+                    <span>{{ name.replace('_', ' ')|title }}</span>
+                    <span class="count">{{ count }}</span>
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No defects detected at the selected confidence threshold.</p>
+
+        {% endif %}
+
+    </section>
+
+    <p class="info">
+        Results are based on visible image analysis using the trained YOLOv8 model.
+        This system does not electrically test PCB functionality.
+    </p>
+
+    <div class="actions">
+
+        <a href="/" class="button">
+            Inspect Another PCB
+        </a>
+
+    </div>
+
+</main>
+
+<footer>
+    PCB Vision AI | AI-Based PCB Inspection
+</footer>
+
+</body>
+</html>
+
